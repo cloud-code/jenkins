@@ -1,43 +1,22 @@
-pipeline {
+node("docker") {
 	def builtImage
-	agent {
-		label 'docker'
+	stage('Cloning Repo...') {
+		echo 'Cloning GitHub Repository..'
+		checkout scm
 	}
-	stages {
-		stage('Cloning Repo...') {
-			echo 'Cloning GitHub Repository..'
-			steps {
-				checkout scm
-			}
+	stage('Build Image') {
+		echo 'Building Image...'
+		builtImage = docker.build("sgdpro/jenkinstest")
+	}
+	stage('Test') {
+		echo 'Testing Image...'
+		builtImage.inside {
+			sh 'echo "Testing the image, stub for now..."'
 		}
-		stage('Build Image') {
-			steps {
-				echo 'Building Image...'
-				builtImage = docker.build("sgdpro/jenkinstest")
-			}
-		}
-		stage('Test') {
-			steps {
-				echo 'Testing Image...'
-				builtImage.inside {
-					sh 'echo "Testing the image, stub for now..."'
-				}
-			}
-		}
-		stage('Deploy') {
-			steps {
-				echo 'Deploying - Publishing Image....'
-				builtImage.push("${env.BUILD_ID}")
-				builtImage.push("latest")
-			}
-		}
+	}
+	stage('Deploy') {
+		echo 'Deploying - Publishing Image....'
+		builtImage.push("${env.BUILD_ID}")
+		builtImage.push("latest")
 	}
 }
-/* node("docker") {
-	def builtImage
-	checkout scm
-	builtImage = docker.build("sgdpro/jenkinstest")
-	builtImage.push("${env.BUILD_ID}")
-	builtImage.push("latest")
-} */
-
